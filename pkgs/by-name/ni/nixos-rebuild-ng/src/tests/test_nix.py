@@ -68,7 +68,7 @@ def test_build_flake(mock_run: Mock, monkeypatch: MonkeyPatch, tmpdir: Path) -> 
             "nix-command flakes",
             "build",
             "--print-out-paths",
-            ".#nixosConfigurations.hostname.config.system.build.toplevel",
+            '.#nixosConfigurations."hostname".config.system.build.toplevel',
             "--no-link",
             "--nix-flag",
             "foo",
@@ -194,7 +194,7 @@ def test_build_remote_flake(
                     "nix-command flakes",
                     "eval",
                     "--raw",
-                    ".#nixosConfigurations.hostname.config.system.build.toplevel.drvPath",
+                    '.#nixosConfigurations."hostname".config.system.build.toplevel.drvPath',
                     "--flake",
                 ],
                 stdout=PIPE,
@@ -263,6 +263,8 @@ def test_copy_closure(monkeypatch: MonkeyPatch) -> None:
         mock_run.assert_called_with(
             [
                 "nix",
+                "--extra-experimental-features",
+                "nix-command flakes",
                 "copy",
                 "--copy-flag",
                 "--from",
@@ -304,7 +306,7 @@ def test_edit(mock_run: Mock, monkeypatch: MonkeyPatch, tmpdir: Path) -> None:
             "edit",
             "--commit-lock-file",
             "--",
-            f"{tmpdir}#nixosConfigurations.attr",
+            f'{tmpdir}#nixosConfigurations."attr"',
         ],
         check=False,
     )
@@ -674,6 +676,8 @@ def test_rollback_temporary_profile(tmp_path: Path) -> None:
 def test_set_profile(mock_run: Mock) -> None:
     profile_path = Path("/path/to/profile")
     config_path = Path("/path/to/config")
+    mock_run.return_value = CompletedProcess([], 0)
+
     n.set_profile(
         m.Profile("system", profile_path),
         config_path,
@@ -685,6 +689,19 @@ def test_set_profile(mock_run: Mock) -> None:
         ["nix-env", "-p", profile_path, "--set", config_path],
         remote=None,
         sudo=False,
+    )
+
+    mock_run.return_value = CompletedProcess([], 1)
+
+    with pytest.raises(m.NixOSRebuildError) as e:
+        n.set_profile(
+            m.Profile("system", profile_path),
+            config_path,
+            target_host=None,
+            sudo=False,
+        )
+    assert str(e.value).startswith(
+        "error: your NixOS configuration path seems to be missing essential files."
     )
 
 
@@ -714,7 +731,7 @@ def test_switch_to_configuration_without_systemd_run(
         remote=None,
     )
 
-    with pytest.raises(m.NRError) as e:
+    with pytest.raises(m.NixOSRebuildError) as e:
         n.switch_to_configuration(
             config_path,
             m.Action.BOOT,

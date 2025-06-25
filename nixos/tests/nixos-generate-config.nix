@@ -15,8 +15,8 @@
     system.nixos-generate-config.desktopConfiguration = [
       ''
         # DESKTOP
-        services.xserver.displayManager.gdm.enable = true;
-        services.xserver.desktopManager.gnome.enable = true;
+        services.displayManager.gdm.enable = true;
+        services.desktopManager.gnome.enable = true;
       ''
     ];
   };
@@ -40,11 +40,17 @@
 
     # Test if the Perl variable $desktopConfiguration is spliced correctly
     machine.succeed(
-        "grep 'services\\.xserver\\.desktopManager\\.gnome\\.enable = true;' /etc/nixos/configuration.nix"
+        "grep 'services\\.desktopManager\\.gnome\\.enable = true;' /etc/nixos/configuration.nix"
     )
 
     machine.succeed("rm -rf /etc/nixos")
     machine.succeed("nixos-generate-config --flake")
     machine.succeed("nix-instantiate --parse /etc/nixos/flake.nix /etc/nixos/configuration.nix /etc/nixos/hardware-configuration.nix")
+
+    machine.succeed("mv /etc/nixos /etc/nixos-with-flake-arg")
+    machine.succeed("printf '[Defaults]\nFlake = 1\n' > /etc/nixos-generate-config.conf")
+    machine.succeed("nixos-generate-config")
+    machine.succeed("nix-instantiate --parse /etc/nixos/flake.nix /etc/nixos/configuration.nix /etc/nixos/hardware-configuration.nix")
+    machine.succeed("diff -r /etc/nixos /etc/nixos-with-flake-arg")
   '';
 }

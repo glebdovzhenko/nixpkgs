@@ -2,25 +2,30 @@
   lib,
   buildPythonPackage,
   fetchFromGitHub,
-  fetchpatch,
+
+  # build system
+  setuptools,
 
   # dependencies
+  absl-py,
   array-record,
-  dill,
   dm-tree,
-  future,
+  etils,
   immutabledict,
-  importlib-resources,
   numpy,
   promise,
   protobuf,
   psutil,
+  pyarrow,
   requests,
   simple-parsing,
-  six,
   tensorflow-metadata,
   termcolor,
+  toml,
   tqdm,
+  wrapt,
+  pythonOlder,
+  importlib-resources,
 
   # tests
   apache-beam,
@@ -28,6 +33,7 @@
   click,
   cloudpickle,
   datasets,
+  dill,
   ffmpeg,
   imagemagick,
   jax,
@@ -58,43 +64,43 @@
 
 buildPythonPackage rec {
   pname = "tensorflow-datasets";
-  version = "4.9.8";
+  version = "4.9.9";
   pyproject = true;
 
   src = fetchFromGitHub {
     owner = "tensorflow";
     repo = "datasets";
     tag = "v${version}";
-    hash = "sha256-nqveZ+8b0f5sGIn6WufKeA37yEsZjzhCIbCfwMZ9JOM=";
+    hash = "sha256-ZXaPYmj8aozfe6ygzKybId8RZ1TqPuIOSpd8XxnRHus=";
   };
 
-  patches = [
-    # mlmlcroissant uses encoding_formats, not encoding_formats.
-    # Backport https://github.com/tensorflow/datasets/pull/11037 until released.
-    (fetchpatch {
-      url = "https://github.com/tensorflow/datasets/commit/92cbcff725a1036569a515cc3356aa8480740451.patch";
-      hash = "sha256-2hnMvQP83+eAJllce19aHujcoWQzUz3+LsasWCo4BtM=";
-    })
-  ];
+  build-system = [ setuptools ];
 
-  dependencies = [
-    array-record
-    dill
-    dm-tree
-    future
-    immutabledict
-    importlib-resources
-    numpy
-    promise
-    protobuf
-    psutil
-    requests
-    simple-parsing
-    six
-    tensorflow-metadata
-    termcolor
-    tqdm
-  ];
+  dependencies =
+    [
+      absl-py
+      array-record
+      dm-tree
+      etils
+      immutabledict
+      numpy
+      promise
+      protobuf
+      psutil
+      pyarrow
+      requests
+      simple-parsing
+      tensorflow-metadata
+      termcolor
+      toml
+      tqdm
+      wrapt
+    ]
+    ++ etils.optional-dependencies.epath
+    ++ etils.optional-dependencies.etree
+    ++ lib.optionals (pythonOlder "3.9") [
+      importlib-resources
+    ];
 
   pythonImportsCheck = [ "tensorflow_datasets" ];
 
@@ -104,6 +110,7 @@ buildPythonPackage rec {
     click
     cloudpickle
     datasets
+    dill
     ffmpeg
     imagemagick
     jax

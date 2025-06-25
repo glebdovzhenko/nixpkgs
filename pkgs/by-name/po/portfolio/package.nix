@@ -34,11 +34,11 @@ let
 in
 stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "PortfolioPerformance";
-  version = "0.76.3";
+  version = "0.77.2";
 
   src = fetchurl {
     url = "https://github.com/buchen/portfolio/releases/download/${finalAttrs.version}/PortfolioPerformance-${finalAttrs.version}-linux.gtk.x86_64.tar.gz";
-    hash = "sha256-HbmNIRKNV1vmDX6PdjBvBNfyLP/pqtRCZRBHNADyiqM=";
+    hash = "sha256-3BnCD92gdTgnxCI1haqw4wmFjmtraagSWz/SOzSTlbA=";
   };
 
   nativeBuildInputs = [
